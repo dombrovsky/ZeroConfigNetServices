@@ -70,7 +70,7 @@ namespace PublishServiceSample
             this.serviceTypeTextBox.Location = new System.Drawing.Point(95, 32);
             this.serviceTypeTextBox.Name = "serviceTypeTextBox";
             this.serviceTypeTextBox.Size = new System.Drawing.Size(177, 20);
-            this.serviceTypeTextBox.TabIndex = 1;
+            this.serviceTypeTextBox.TabIndex = 2;
             this.serviceTypeTextBox.Text = "_intairact._tcp.";
             // 
             // label3
@@ -87,7 +87,7 @@ namespace PublishServiceSample
             this.portTextBox.Location = new System.Drawing.Point(95, 58);
             this.portTextBox.Name = "portTextBox";
             this.portTextBox.Size = new System.Drawing.Size(177, 20);
-            this.portTextBox.TabIndex = 1;
+            this.portTextBox.TabIndex = 3;
             this.portTextBox.Text = "80";
             // 
             // startStopButton
@@ -95,7 +95,7 @@ namespace PublishServiceSample
             this.startStopButton.Location = new System.Drawing.Point(197, 144);
             this.startStopButton.Name = "startStopButton";
             this.startStopButton.Size = new System.Drawing.Size(75, 23);
-            this.startStopButton.TabIndex = 2;
+            this.startStopButton.TabIndex = 4;
             this.startStopButton.Text = "Publish";
             this.startStopButton.UseVisualStyleBackColor = true;
             this.startStopButton.Click += new System.EventHandler(this.startStopButton_Click);
@@ -115,7 +115,7 @@ namespace PublishServiceSample
             this.updateTXTButton.Location = new System.Drawing.Point(13, 143);
             this.updateTXTButton.Name = "updateTXTButton";
             this.updateTXTButton.Size = new System.Drawing.Size(75, 23);
-            this.updateTXTButton.TabIndex = 4;
+            this.updateTXTButton.TabIndex = 5;
             this.updateTXTButton.Text = "Update TXT";
             this.updateTXTButton.UseVisualStyleBackColor = true;
             this.updateTXTButton.Click += new System.EventHandler(this.updateTXTButton_Click);
