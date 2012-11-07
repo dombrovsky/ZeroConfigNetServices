@@ -8,7 +8,7 @@ def publish(name, folder)
     rm_rf 'ase-lab.github.com'
     system('git clone https://github.com/ase-lab/ase-lab.github.com.git')
     cd 'ase-lab.github.com' do
-      rm_rf folder
+      system('git rm -r ' + folder)
       mv('../publish', folder)
       system('git add ' + folder)
       system('git commit -m "Updated ' + name + '"')
