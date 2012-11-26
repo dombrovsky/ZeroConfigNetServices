@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ZeroconfService")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Bringing Bonjour technology to .Net developers.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("David Hammerton, Deusty Designs and the .NET Community")]
 [assembly: AssemblyProduct("ZeroconfService")]
