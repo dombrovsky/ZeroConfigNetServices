@@ -71,7 +71,12 @@ namespace ZeroconfService
 		/// <param name="exception">The error that prevented the service from publishing.</param>
 		public delegate void ServiceNotPublished(NetService service, DNSServiceException exception);
 
-		/// <summary>
+        /// <summary>
+        /// Occurs when bonjor service failed remotely.
+        /// </summary>
+	    public event EventHandler ServiceFailed;
+
+	    /// <summary>
 		/// Occurs when a service fails to be published.
 		/// </summary>
 		public event ServiceNotPublished DidNotPublishService;
@@ -275,19 +280,23 @@ namespace ZeroconfService
 
             err = mDNSImports.DNSServiceRegister(out registeredServiceHandle, 0, 0, Name, Type, Domain, null, port, txtRecordLen, TXTRecordData, registerReplyCb, IntPtr.Zero);
 
-			if (err == DNSServiceErrorType.NoError)
-			{
-				SetupWatchSocket(registeredServiceHandle);
-			}
-			else
-			{
-				Stop();
-				if (DidNotPublishService != null)
-				{
-					DNSServiceException exception = new DNSServiceException("DNSServiceRegister", err);
-					DidNotPublishService(this, exception);
-				}
-			}
+            if (err == DNSServiceErrorType.NoError)
+            {
+                SetupWatchSocket(registeredServiceHandle, o =>
+                {
+                    Stop();
+                    OnServiceFailed(EventArgs.Empty);
+                });
+            }
+            else
+            {
+                Stop();
+                if (DidNotPublishService != null)
+                {
+                    DNSServiceException exception = new DNSServiceException("DNSServiceRegister", err);
+                    DidNotPublishService(this, exception);
+                }
+            }
 		}
 
 		/// <summary>
@@ -756,6 +765,15 @@ namespace ZeroconfService
 				}
 			}
 		}
+
+        private void OnServiceFailed(EventArgs e)
+        {
+            EventHandler handler = ServiceFailed;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
 
 		/// <summary>
 		/// Returns a <c>byte[]</c> object representing a TXT record

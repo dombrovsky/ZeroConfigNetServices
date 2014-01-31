@@ -23,13 +23,10 @@ namespace PublishServiceSample
 
         private void DoPublish()
         {
-            try
+            var exception = CheckBonjourService();
+            if (exception != null)
             {
-                Debug.WriteLine(String.Format("Bonjour Version: {0}", NetService.DaemonVersion));
-            }
-            catch (Exception ex)
-            {
-                String message = ex is DNSServiceException ? "Bonjour is not installed!" : ex.Message;
+                String message = exception is DNSServiceException ? "Bonjour is not installed!" : exception.Message;
                 MessageBox.Show(message, "Critical Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Application.Exit();
             }
@@ -43,6 +40,7 @@ namespace PublishServiceSample
 
 			publishService.DidPublishService += new NetService.ServicePublished(publishService_DidPublishService);
 			publishService.DidNotPublishService += new NetService.ServiceNotPublished(publishService_DidNotPublishService);
+            publishService.ServiceFailed += publishService_ServiceFailed;
 
 			/* HARDCODE TXT RECORD */
 			System.Collections.Hashtable dict = new System.Collections.Hashtable();
@@ -59,6 +57,28 @@ namespace PublishServiceSample
 			startStopButton.Text = "Publishing...";
 
 			mPublishing = true;
+        }
+
+        Exception CheckBonjourService()
+        {
+            try
+            {
+                Debug.WriteLine(String.Format("Bonjour Version: {0}", NetService.DaemonVersion));
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        void publishService_ServiceFailed(object sender, EventArgs e)
+        {
+            while (CheckBonjourService() != null)
+            {
+                System.Threading.Thread.Sleep(500);
+            }
+            publishService.Publish();
         }
 
 		void publishService_DidPublishService(NetService service)

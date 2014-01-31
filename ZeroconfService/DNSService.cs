@@ -25,6 +25,8 @@ namespace ZeroconfService
 		// Provides a mapping from sdRef's to their associated WatchSocket's
 		private Hashtable sdRefToSocketMapping = Hashtable.Synchronized(new Hashtable());
 
+        private Action<int> _onError;
+
         /// <summary>
         /// 
         /// </summary>
@@ -205,15 +207,24 @@ namespace ZeroconfService
 		{
 			WatchSocket socket = (WatchSocket)result.AsyncState;
 
-			bool ret = socket.EndPoll(result);
-
+			int ret = socket.EndPoll(result);
+            
 			if (socket.Stopping)
 			{
 				// If we're stopping, don't process any results, and don't begin a new poll.
 				return;
 			}
 
-			if (ret)
+            if (ret <= 0)
+            {
+                if (_onError != null)
+                {
+                    _onError(ret);
+                }
+                return;
+            }
+
+			if (ret > 0)
 			{
 				PollInvokeableDelegate cb = new PollInvokeableDelegate(PollInvokeable);
 				Invoke(cb, socket.SDRef);
@@ -223,7 +234,7 @@ namespace ZeroconfService
 			if (!socket.Stopping)
 			{
 				AsyncCallback callback = new AsyncCallback(AsyncPollCallback);
-				socket.BeginPoll(-1, SelectMode.SelectRead, callback, socket);
+                IAsyncResult ar = socket.BeginPoll(-1, SelectMode.SelectRead, callback, socket);
 			}
 		}
 
@@ -232,15 +243,16 @@ namespace ZeroconfService
 		/// data back to the primary DNSService API when data arrives
 		/// on the socket.
 		/// </summary>
-		protected void SetupWatchSocket(IntPtr sdRef)
+		protected void SetupWatchSocket(IntPtr sdRef, Action<int> onError = null)
 		{
+		    _onError = onError;
 			Int32 socketId = mDNSImports.DNSServiceRefSockFD(sdRef);
 			WatchSocket socket = new WatchSocket(socketId, sdRef);
 
 			sdRefToSocketMapping.Add(sdRef, socket);
 
 			AsyncCallback callback = new AsyncCallback(AsyncPollCallback);
-			IAsyncResult ar = socket.BeginPoll(-1, SelectMode.SelectRead, callback, socket);
+            IAsyncResult ar = socket.BeginPoll(-1, SelectMode.SelectRead, callback, socket);
 		}
 
 		/// <summary>

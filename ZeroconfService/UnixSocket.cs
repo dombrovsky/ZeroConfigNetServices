@@ -12,7 +12,7 @@ namespace ZeroconfService
 		private Int32 mSocket;
 
 		// Delegate to allow asynchronous calling of the poll method
-		private delegate bool AsyncPollCaller(int microSeconds, SelectMode mode);
+		private delegate int AsyncPollCaller(int microSeconds, SelectMode mode);
 		private AsyncPollCaller caller;
 
 		public UnixSocket(Int32 socket)
@@ -28,12 +28,12 @@ namespace ZeroconfService
 			return result;
 		}
 
-		public virtual bool EndPoll(IAsyncResult asyncResult)
+		public virtual int EndPoll(IAsyncResult asyncResult)
 		{
 			return caller.EndInvoke(asyncResult);
 		}
 
-		protected bool Poll(int microSeconds, SelectMode mode)
+		protected int Poll(int microSeconds, SelectMode mode)
 		{
 			fd_set readFDs = null;
 			fd_set writeFDs = null;
@@ -51,15 +51,16 @@ namespace ZeroconfService
 				writeFDs.FD_SET(mSocket);
 			}
 
-			Int32 ret = select(0, readFDs, null, null, null);
+            Int32 ret = select(0, readFDs, null, null, null);
 
-			//Console.WriteLine("select returned: {0}", ret);
+            if (readFDs != null && readFDs.FD_ISSET(mSocket))
+            {
+                var buffer = new byte[2];
+                var res = recv(mSocket, buffer, 1, MsgPeek);
+                return res < 0 ? -1 : res;
+            }
 
-			if (readFDs.FD_ISSET(mSocket))
-			{
-				return true;
-			}
-			return false;
+		    return -1;
 		}
 
 		/* unmanaged stuff */
@@ -119,6 +120,8 @@ namespace ZeroconfService
 		{
 		}
 
+	    private const int MsgPeek = 0x2;
+
 		[DllImport("Ws2_32.dll")]
 		private static extern Int32 __WSAFDIsSet(Int32 fd, fd_set set);
 
@@ -127,6 +130,9 @@ namespace ZeroconfService
 
 		[DllImport("Ws2_32.dll")]
 		private static extern Int32 WSAGetLastError();
+
+        [DllImport("Ws2_32.dll")]
+        static extern int recv(Int32 socketHandle, byte[] buf, int len, int flags);
 	}
 
 	class WatchSocket : UnixSocket
@@ -165,7 +171,7 @@ namespace ZeroconfService
 			return base.BeginPoll(microSeconds, mode, callback, state);
 		}
 
-		public override bool EndPoll(IAsyncResult asyncResult)
+		public override int EndPoll(IAsyncResult asyncResult)
 		{
 			inPoll = false;
 			return base.EndPoll(asyncResult);
