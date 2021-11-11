@@ -9,7 +9,7 @@ namespace ZeroconfService
 {
 	public class UnixSocket
 	{
-		private Int32 mSocket;
+		private UIntPtr mSocket;
 
 		// Delegate to allow asynchronous calling of the poll method
 		private delegate bool AsyncPollCaller(int microSeconds, SelectMode mode);
@@ -17,7 +17,7 @@ namespace ZeroconfService
 
 		public UnixSocket(Int32 socket)
 		{
-			mSocket = socket;
+			mSocket = new UIntPtr(unchecked((uint)socket));
 
 			caller = new AsyncPollCaller(Poll);
 		}
@@ -52,6 +52,7 @@ namespace ZeroconfService
 			}
 
 			Int32 ret = select(0, readFDs, null, null, null);
+			System.Diagnostics.Debug.Assert(ret != -1);
 
 			//Console.WriteLine("select returned: {0}", ret);
 
@@ -68,18 +69,18 @@ namespace ZeroconfService
 		{
 			public UInt32 fd_count;
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
-			public Int32[] fd_array;
+			public UIntPtr[] fd_array;
 
 			public fd_set()
 			{
-				fd_array = new Int32[64];
+				fd_array = new UIntPtr[64];
 			}
 
 			public void FD_ZERO()
 			{
 				fd_count = 0;
 			}
-			public void FD_SET(Int32 fd)
+			public void FD_SET(UIntPtr fd)
 			{
 				int i;
 				for (i = 0; i < fd_count; i++)
@@ -92,7 +93,7 @@ namespace ZeroconfService
 					fd_count++;
 				}
 			}
-			public void FD_CLR(Int32 fd)
+			public void FD_CLR(UIntPtr fd)
 			{
 				int i;
 				for (i = 0; i < fd_count; i++)
@@ -109,7 +110,7 @@ namespace ZeroconfService
 					}
 				}
 			}
-			public bool FD_ISSET(Int32 fd)
+			public bool FD_ISSET(UIntPtr fd)
 			{
 				return (__WSAFDIsSet(fd, this) != 0);
 			}
@@ -120,7 +121,7 @@ namespace ZeroconfService
 		}
 
 		[DllImport("Ws2_32.dll")]
-		private static extern Int32 __WSAFDIsSet(Int32 fd, fd_set set);
+		private static extern Int32 __WSAFDIsSet(UIntPtr fd, fd_set set);
 
 		[DllImport("Ws2_32.dll")]
 		private static extern Int32 select(Int32 nfds, fd_set readFDs, fd_set writeFDs, fd_set exceptFDs, timeval timeout);
